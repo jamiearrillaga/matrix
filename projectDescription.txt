@@ -1,0 +1,60 @@
+Problem A
+In machine learning/statistics, there is the concept of dimension reduction. We have data on many variables, and for various reasons (reduced computation time, better statistical accuracy) wish to work with a reduced number of variables.
+
+This is especially true for image recognition. To see how, consider the famous MNIST dataset. It has 65000 images, each of which is 28x28 pixels, greyscale, intensity 0 to 255 (white to black). The dataset, say stored in a file, will have 65000 lines, with 282 = 784 pixel intensity values per line. We will assume here that the images are stored in row-major order.
+
+Instead, the real issue is that 784 variables are too many. The most common solution is to break an image into tiles, say 4x4. In each tile, we compute some summary number of those 16 numbers, such as the mean or the maximum. We now have only 72 = 49 variables to work with. (There are many variations on this theme.) But here we will take another tack, a variant of something called topological data analysis.
+
+Here is how the method works. Consider the small example in which the image matrix is
+
+ 4   15   16   1
+17    2   10  18
+11   12    9  20
+(Side note: In a collection of images, those 12 numbers would be stored in ONE row of the matrix, i.e. 4 15 16 1 17 2 10 18 11 12 9 20 If we had, say, 200 images in our collection, there would be 200 such rows. But here we will just work with a single image, with one row of the image being stored in one line of the file. In the toy example above, the file would have 3 lines, with 4 numbers in each line.)
+
+We have the notion of thresholds and components. A component is a set of consecutive pixels whose intensities are at or above the given threshold.
+
+Say our threshold is 10. Then in row 1, the 15 and 16 pair for a component, giving a total component count for that row of 1. In row 2, though, there are 2 components, the singleton 17 and the pair 10 and 18. Row 3 has a component count of 2, and the columns values are 1,2,1,1. The NW-SE diagonal starting at 4, i.e. 4,2,9, has a count of 0, and the ones starting at 15, 16 and 1 have counts of 1,1,0. The NE-SW diagonal at 20, consisting of just 20, has a count of 1.
+
+In tabulating NW-SE diagonals, start in the "most SW" section, i.e.
+
+11
+17,12
+4,2,9
+15,10,20
+16,18
+1
+a total of 6 diagonals.
+
+In tabulating NE-SW diagonals, start in the "most NW" section,
+
+4
+17,15
+11,2,16
+...
+The overall count vector would be
+
+[1,2,2,
+ 1,2,1,1,
+ 1,1,0,1,1,0,
+ 0,1,2,1,1,1]
+It's just one Python list, but I've put separate directions on separate lines for clarity. We have 3 row counts, then 4 column counts, then 6 NW-SE diagonals, then 6 NE-SW diagonals, for a total of 19 counts.
+
+This would be done for several thresholds of the user's choice. The above kind of list would be created for each threshold, and strung together in the user's specified threshold values. If the user were to specify, say, 3 thresholds, the produced list would have 57 elements, in 3 groups of 19, with the 3 groups in the same order as the user's list of thresholds.
+
+That data may be subsequently reduced further, but we won't worry about that here.
+
+You will write a function with heading
+def tda(imgFile,nr,nc,thresholds)
+where:
+- imgFile is the name of a file containing one image, as described above. Assume the numbers are separated by blanks. One row of the image is stored in one line of the file. For instance, in the 3x4 matrix above, the file would consist of three lines, the first of which would contain
+[4 15 16 1] and so on.
+- nr and nc are the number of rows and columns in an image.
+- thresholds is a Python list of thresholds.
+An image need not be square, so both nr and nc must be specified.
+
+The return value is the full list of component counts, e.g. 57 elements long in the example mentioned above.
+Exit if any of the following errors occurs. Your code must report the error with a printed message.
+- File not present.
+- An element in some line in the file is not a nonnegative integer.
+- The number of elements in a line is inconsistent with nr and nc.
