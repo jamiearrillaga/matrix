@@ -1,3 +1,3 @@
 Python program to analyze a matrix
 
-executable "python matrix.py"
+command line "python matrix.py"
